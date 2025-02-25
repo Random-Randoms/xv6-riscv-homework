@@ -146,7 +146,11 @@ out_alc_error:
     addi a0, zero, 2
     la   a1, msg_alc
     call fprintf
- 
+    
+    # free heap
+    addi a0, t2, 0
+    call free
+
     # exit
     li   a7, 2                  # Exit system call
     li   a0, -1                 # Exit status (allocation fail)
@@ -157,6 +161,10 @@ out_fmt_error:
     addi a0, zero, 2
     la   a1, msg_fmt            
     call fprintf    
+
+    # free heap
+    addi a0, t2, 0
+    call free
 
     # exit
     li   a7, 2                  # Exit system call
@@ -179,6 +187,10 @@ out_buf_str:
     # print \n
     la   a0, msg_nl
     call printf
+
+    # free heap
+    addi a0, t2, 0
+    call free
 
     # exit
     li   a7, 2                  # Exit system call
