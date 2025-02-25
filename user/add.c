@@ -2,15 +2,6 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-void skip() {
-  char cur;
-  while (read(0, &cur, 1) == 1)
-    if (cur == '\n' || cur == '\r')
-      break;
-}
-
-
-
 int
 main(int argc, char *argv[])
 {
@@ -54,7 +45,7 @@ main(int argc, char *argv[])
   printf("%u\n", res);
   }
   else {
-    printf("%s", format_msg);
+    fprintf(2, "%s", format_msg);
   }
 
   printf("|%s|\n", bf);
