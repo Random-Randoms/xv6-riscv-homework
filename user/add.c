@@ -6,8 +6,16 @@ int
 main(int argc, char *argv[])
 {
   char format_msg[] = "format error: two space-separated numbers expected\n";
+  char alc_msg[]    = "error: allocation fail\n";
+  char buf_of_msg[] = "error: buffer overflow (too long input)\n";
   int bfsize = 20;
   char* bf = malloc(bfsize * sizeof(char));
+
+  if (!bf) {
+    fprintf(2, "%s", alc_msg);
+    return -1;
+  }
+
   char* snd;
   char cur;
   int i, l, r, res;
@@ -33,6 +41,12 @@ main(int argc, char *argv[])
       continue;
     }
   }
+
+  if (i == bfsize) {
+    fprintf(2, "%s", buf_of_msg);
+    return -3;
+  }
+
   bf[i] = '\0';
 
   if (status == 1) {
@@ -46,6 +60,7 @@ main(int argc, char *argv[])
   }
   else {
     fprintf(2, "%s", format_msg);
+    return -2;
   }
 
   printf("|%s|\n", bf);
