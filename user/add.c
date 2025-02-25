@@ -8,7 +8,7 @@ main(int argc, char *argv[])
   char format_msg[] = "format error: two space-separated numbers expected\n";
   char alc_msg[]    = "error: allocation fail\n";
   char buf_of_msg[] = "error: buffer overflow (too long input)\n";
-  int bfsize = 20;
+  int bfsize = 22;
   char* bf = malloc(bfsize * sizeof(char));
 
   if (!bf) {
