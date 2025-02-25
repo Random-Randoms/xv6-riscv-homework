@@ -105,15 +105,26 @@ compute_sum:
     j out_buf_str
 
 out_alc_error:
-    la   a0, msg_alc
-    call printf
-
-    j exit_
+    # output error message to stderr
+    addi a0, zero, 2
+    la   a1, msg_alc
+    call fprintf
+ 
+    # exit
+    li   a7, 2                  # Exit system call
+    li   a0, -1                 # Exit status (allocation fail)
+    ecall
 
 out_fmt_error:
-    # output error message
-    la   a0, msg_fmt            
-    call printf    
+    # output error message to stderr
+    addi a0, zero, 2
+    la   a1, msg_fmt            
+    call fprintf    
+
+    # exit
+    li   a7, 2                  # Exit system call
+    li   a0, -2                 # Exit status (format fail)
+    ecall
 
 out_buf_str:
     # print |
@@ -121,7 +132,7 @@ out_buf_str:
     call printf
 
     # print string
-    addi a0, t2, 0            # set first arg to bf
+    addi a0, t2, 0              # set first arg to bf
     call printf
 
     # print |
@@ -132,7 +143,6 @@ out_buf_str:
     la   a0, msg_nl
     call printf
 
-exit_:
     # exit
     li   a7, 2                  # Exit system call
     li   a0, 0                  # Exit status (success)
