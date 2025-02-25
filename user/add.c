@@ -16,9 +16,11 @@ main(int argc, char *argv[])
     return -1;
   }
 
-  char* snd;
+  char* snd, *fst = bf;
   char cur;
   int i, l, r, res;
+  char flipl = 0, flipr = 0;
+  int reading = 1;
   int status = 0;
 
   for (i = 0; i < bfsize; ++i) {
@@ -28,9 +30,26 @@ main(int argc, char *argv[])
 
     bf[i] = cur;
 
+    if (cur == '-') {
+      if (reading == 1) {
+        reading = 0;
+        flipl = 1;
+        ++fst;
+        continue;
+      }
+      if (reading == 2) {
+        reading = 0;
+        flipr = 1;
+        ++snd;
+        continue;
+      }
+      status = -1;
+      continue;
+    }
+
     if (cur == ' ') {
       if (status == 0)
-        status = 1, snd = bf + i + 1;
+        status = 1, snd = bf + i + 1, reading = 2;
       else
         status = -1;
       continue;
@@ -44,6 +63,7 @@ main(int argc, char *argv[])
 
   if (i == bfsize) {
     fprintf(2, "%s", buf_of_msg);
+    free(bf);
     return -3;
   }
 
@@ -51,17 +71,26 @@ main(int argc, char *argv[])
 
   if (status == 1) {
 
-  l = atoi(bf);
+  l = atoi(fst);
   r = atoi(snd);
+
+  if (flipl)
+   l = -l;
+
+  if (flipr)
+    r = -r;
 
   add(l, r, &res);
 
-  printf("%u\n", res);
+  printf("%d\n", res);
   }
   else {
     fprintf(2, "%s", format_msg);
+    free(bf);
     return -2;
   }
 
   printf("|%s|\n", bf);
+  free(bf);
+  return 0;
 }
