@@ -47,6 +47,8 @@ main(int argc, char *argv[])
       continue;
     }
 
+    reading = 0;
+
     if (cur == ' ') {
       if (status == 0)
         status = 1, snd = bf + i + 1, reading = 2;
