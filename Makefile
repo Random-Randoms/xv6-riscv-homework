@@ -141,7 +141,8 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_add\
-	$U/_add_rv
+	$U/_add_rv\
+	$U/_fork1
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
