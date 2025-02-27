@@ -1,13 +1,16 @@
 .data                                      # Data section
+buffer:                                    # bf
+    .skip 24
 
 msg_fmt: .asciz "format error: two space-separated numbers expected\n"  # Format error message
-msg_alc: .asciz "memory allocation failed\n"                            # Malloc error message
 out_fmt: .asciz "%d\n"                                                  # Output format
 msg_div: .asciz "|"                                                     # Message divisor
 msg_nl:  .asciz "\n"                                                    # Newline
 
 .text                                      # Text (code) section
 .global main                               # Exportable object (label)
+
+
 
 # regs
 # t0 | i            | int
@@ -26,24 +29,19 @@ main:
     li   t0, 0                  # i = 0
     li   t5, 1                  # reading = 1
     li   t3, 0                  # flipl = false, flipr = false
-
-    # allocate 22 bytes for bf
-    li   a0, 22                 
-    call malloc
-    addi t2, a0, 0
-    beqz t2, out_alc_error
+    la   t2, buffer             # buffer
 
     # read input
     addi a0, t2, 0
-    addi a1, zero, 22
+    addi a1, zero, 24
     call gets  
 
     # initial fst
     addi a0, t2, 0               # fst = bf
 loop:            
-    addi t0, t0, -22
-    beqz t0, loop_end            # if i == 22 finish loop
-    addi t0, t0, 23              # increment i otherwise
+    addi t0, t0, -24
+    beqz t0, loop_end            # if i == 24 finish loop
+    addi t0, t0, 25              # increment i otherwise
 
     add  t2, t2, t0        
     lb   t1, -1(t2)              # load bf[i]  
@@ -141,34 +139,15 @@ skip_snd:
     # output buffered string
     j out_buf_str
 
-out_alc_error:
-    # output error message to stderr
-    addi a0, zero, 2
-    la   a1, msg_alc
-    call fprintf
-    
-    # free heap
-    addi a0, t2, 0
-    call free
-
-    # exit
-    li   a7, 2                  # Exit system call
-    li   a0, -1                 # Exit status (allocation fail)
-    ecall
-
 out_fmt_error:
     # output error message to stderr
     addi a0, zero, 2
     la   a1, msg_fmt            
-    call fprintf    
-
-    # free heap
-    addi a0, t2, 0
-    call free
+    call fprintf
 
     # exit
     li   a7, 2                  # Exit system call
-    li   a0, -2                 # Exit status (format fail)
+    li   a0, 2                  # Exit status (format fail)
     ecall
 
 out_buf_str:
@@ -187,10 +166,6 @@ out_buf_str:
     # print \n
     la   a0, msg_nl
     call printf
-
-    # free heap
-    addi a0, t2, 0
-    call free
 
     # exit
     li   a7, 2                  # Exit system call
