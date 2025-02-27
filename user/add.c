@@ -5,16 +5,12 @@
 int
 main(int argc, char *argv[])
 {
-  char format_msg[] = "format error: two space-separated numbers expected\n";
-  char alc_msg[]    = "error: allocation fail\n";
-  char buf_of_msg[] = "error: buffer overflow (too long input)\n";
-  int bfsize = 22;
-  char* bf = malloc(bfsize * sizeof(char));
+  char format_msg[]     = "format error: two space-separated numbers expected\n";
+  char buf_of_msg[]     = "error: buffer overflow (too long input)\n";
+  char read_fail_msg[]  = "error: reading failed\n";
 
-  if (!bf) {
-    fprintf(2, "%s", alc_msg);
-    return -1;
-  }
+  int bfsize = 24; // maximum 24 symbols (11 * 2 numbers, 1 space, 1 terminal)
+  char bf[24];
 
   char* snd, *fst = bf;
   char cur;
@@ -22,9 +18,22 @@ main(int argc, char *argv[])
   char flipl = 0, flipr = 0;
   int reading = 1;
   int status = 0;
+  int termd = 0;
 
   for (i = 0; i < bfsize; ++i) {
-    if (read(0, &cur, 1) < 1 || cur == '\r' || cur == '\n' || cur == '\0') {
+    int r = read(0, &cur, 1);
+
+    if (r < 0) {
+      fprintf(2, "%s", read_fail_msg);
+      exit(4);
+    }
+
+    if (r < 1) {
+      break;
+    }
+
+    if (cur == '\r' || cur == '\n' || cur == '\0') {
+      termd = 1;
       break;
     }
 
@@ -63,10 +72,9 @@ main(int argc, char *argv[])
     }
   }
 
-  if (i == bfsize) {
+  if (i == bfsize && !termd) {
     fprintf(2, "%s", buf_of_msg);
-    free(bf);
-    return -3;
+    exit(3);
   }
 
   bf[i] = '\0';
@@ -88,11 +96,9 @@ main(int argc, char *argv[])
   }
   else {
     fprintf(2, "%s", format_msg);
-    free(bf);
-    return -2;
+    exit(2);
   }
 
   printf("|%s|\n", bf);
-  free(bf);
-  return 0;
+  exit(0);
 }
