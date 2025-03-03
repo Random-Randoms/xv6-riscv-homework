@@ -25,14 +25,14 @@ main(int argc, char** argv)
         exit(1);
     default:
         printf("Child id: %d\n", pid);
-        int killed = -5;
+        int killed = -5,  ecode = -1000;
 
         if (mode == MODE_A)
-            wait(&killed);
+            killed = wait(&ecode);
         else
-            kill(pid), wait(&killed);
+            kill(pid), killed = wait(&ecode);
 
-        printf("Process %d finished\n", killed);
+        printf("Process %d finished with code %d\n", killed, ecode);
         exit(0);
     }
 }
