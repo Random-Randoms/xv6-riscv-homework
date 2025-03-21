@@ -29,8 +29,11 @@ main(int argc, char** argv)
 
         if (mode == MODE_A)
             killed = wait(&ecode);
-        else
-            kill(pid), killed = wait(&ecode);
+        else {
+            if (kill(pid))
+                fprintf(2, "Kill error\n"), exit(3);
+            killed = wait(&ecode);
+        }
 
         printf("Process %d finished with code %d\n", killed, ecode);
         exit(0);
