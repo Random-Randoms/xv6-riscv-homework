@@ -43,10 +43,10 @@ main(int argc, char** argv) {
             perror(close_fail);
         
         for (int i = 0; i < argc; ++i) {
-            int len = strlen(argv[i]);
+            size_t len = strlen(argv[i]);
             argv[i][len - 1] = '\n';
 
-            int written = 0;
+            size_t written = 0;
             while (written < len) {
                 int added = write(pfd[1], argv[i] + written, len - written);
 
