@@ -45,16 +45,22 @@ int main() {
     char** names = (char**)malloc(sizeof(char*) * (idmax + 1));
 
     for (int i = 0; i < ps; ++i)
-        names[procs[i].pid] = procs[i].name;
+        if (procs[i].pid >= 0)
+            names[procs[i].pid] = procs[i].name;
 
     printf(" pid:  name:  state:  ppid:  pname: \n");
 
-    for (int i = 0; i < ps; ++i)
+    for (int i = 0; i < ps; ++i) {
         printf(" %d ", procs[i].pid),
         printf(" %s ", procs[i].name),
         printf(" %s ", states[procs[i].state]),
-        printf(" %d ", procs[i].ppid),
-        printf(" %s \n", names[procs[i].ppid]);
+        printf(" %d ", procs[i].ppid);
+
+        if (procs[i].ppid >= 0)
+            printf(" %s \n", names[procs[i].ppid]);
+        else
+            printf(" %s \n", "init parentless");
+    }
 
     exit(0);
 }

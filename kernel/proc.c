@@ -703,7 +703,7 @@ int _ps_listinfo(struct procinfo* plist, int lim) {
       return -1;
   
     struct procinfo data;
-    memmove(data.name, p->name, 16);
+    safestrcpy(data.name, p->name, 16);
 
     acquire(&(p->lock));
     data.state = p->state - 2;
@@ -711,7 +711,12 @@ int _ps_listinfo(struct procinfo* plist, int lim) {
     data.pid = p->pid;
     release(&(p->lock));
 
-    if ((int)data.state < 0)
+    if ((int)data.state < 0)  // not interesting process
+      continue;
+
+    ++prcs;
+
+    if (!plist)               // no need to retrieve data
       continue;
 
     acquire(&wait_lock);
@@ -726,10 +731,8 @@ int _ps_listinfo(struct procinfo* plist, int lim) {
 
     release(&wait_lock);
 
-    if (plist && copyout(caller->pagetable, (uint64)plist++, (char*)&data, sizeof(struct procinfo)))
+    if (copyout(caller->pagetable, (uint64)plist++, (char*)&data, sizeof(struct procinfo)))
       return -2;
-
-    ++prcs;
   }
 
   return prcs;
