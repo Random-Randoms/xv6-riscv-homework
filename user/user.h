@@ -24,6 +24,9 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int ps_listinfo(struct procinfo* plist, int lim);
+int mutex();
+int mutex_lock(int);
+int mutex_unlock(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

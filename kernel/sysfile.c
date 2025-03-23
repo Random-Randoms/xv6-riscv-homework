@@ -102,6 +102,10 @@ sys_close(void)
 
   if(argfd(0, &fd, &f) < 0)
     return -1;
+
+  if (f->type == FD_MUTEX && heldsleep(f->lock) && !holdingsleep(f->lock))
+    return -2;
+
   myproc()->ofile[fd] = 0;
   fileclose(f);
   return 0;
@@ -502,4 +506,41 @@ sys_pipe(void)
     return -1;
   }
   return 0;
+}
+
+int sys_mutex(void) {
+  struct file *f;
+
+  if (mutexalloc(&f))
+    return -2;
+
+  int fd = fdalloc(f);
+
+  if (fd < 0) {
+    fileclose(f);
+    return -1;
+  }
+  return fd;
+}
+
+int sys_mutex_lock(void) {
+    struct file* mt;
+    if (argfd(0, 0, &mt) < 0) return -1;
+
+    if (!mt) return -1;
+    if (mt->type != FD_MUTEX) return -2;
+
+    acquiresleep(mt->lock);
+    return 0;
+}
+
+int sys_mutex_unlock(void) {
+    struct file* mt;
+    if (argfd(0, 0, &mt) < 0) return -1;
+
+    if (!mt) return -1;
+    if (mt->type != FD_MUTEX) return -2;
+
+    releasesleep(mt->lock);
+    return 0;
 }

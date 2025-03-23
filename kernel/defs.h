@@ -55,6 +55,10 @@ void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, int, uint64, uint, uint);
 void            itrunc(struct inode*);
 
+// mutex.c
+int             mutexalloc(struct file **f);
+void            mutexclose(struct file *f);
+
 // ramdisk.c
 void            ramdiskinit(void);
 void            ramdiskintr(void);
@@ -124,6 +128,7 @@ void            pop_off(void);
 void            acquiresleep(struct sleeplock*);
 void            releasesleep(struct sleeplock*);
 int             holdingsleep(struct sleeplock*);
+int             heldsleep(struct sleeplock*);
 void            initsleeplock(struct sleeplock*, char*);
 
 // string.c
