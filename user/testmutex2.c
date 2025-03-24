@@ -45,6 +45,13 @@ int main() {
         if (close(mt)) fprintf(2, "mutex closing failed\n"), exit(-4);
     }
 
+    printf("\ndouble lock\n");
+    mt = mutex();
+    printf("first lock exit code: %d\n", mutex_lock(mt));
+    printf("second lock exit code: %d\n", mutex_lock(mt));
+    mutex_unlock(mt);
+    close(mt);
+
     printf("\nleave unclosed mutices\n");
     mt = mutex();
     int mt2 = mutex();
