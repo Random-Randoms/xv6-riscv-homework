@@ -3,13 +3,15 @@
 #include "user/user.h"
 
 int main() {
-    printf("check read/write\n");
+    printf("check read/write/stat\n");
     int mt = mutex();
     if (mt < 0) fprintf(2, "mutex creation fail error\n"), exit(-1);
 
     printf("write exit code: %d\n", write(mt, "kek\n", 5));
     char buf[1];
+    struct stat stt[1];
     printf("read exit code: %d\n", read(mt, buf, 1));
+    printf("stat exit code: %d\n", fstat(mt, stt));
 
     printf("\ncheck close my mutex\n");
     if (mutex_lock(mt)) fprintf(2, "mutex lock failed\n"), exit(-2);
