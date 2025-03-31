@@ -5,6 +5,8 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
+#include "spinlock.h"
+#include "proc.h"
 
 /*
  * the kernel's page table.
@@ -448,4 +450,143 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   } else {
     return -1;
   }
+}
+
+void printflags(uint64 pg) {
+  printf("%s", pg & PTE_R ? "R" : "_");
+  printf("%s", pg & PTE_W ? "W" : "_");
+  printf("%s", pg & PTE_X ? "X" : "_");
+  printf("%s", pg & PTE_U ? "U" : "_");
+  printf("%s", pg & PTE_G ? "G" : "_");
+  printf("%s", pg & PTE_A ? "A" : "_");
+  printf("%s\n", pg & PTE_D ? "D" : "_");
+}
+
+void fmthex(uint64 val, int dgs) {
+  static char digits[] = "0123456789ABCDEF";
+
+  printf("0x");
+
+  for (int i = dgs - 1; i >= 0; --i) {
+    int vl = (val >> (4 * i) & 15);
+
+    char ans[2];
+    ans[1] = 0;
+    ans[0] = digits[vl];
+
+    printf("%s", ans);
+  }
+}
+
+int pagedump(uint64 va, uint64 len, int msk) {
+  struct proc* clr = myproc();
+
+  if (msk < 0 || msk > 3) return -2;
+  msk <<= 6;
+
+  printf("PAGETABLE ");
+  fmthex((uint64)clr->pagetable, 16);
+  printf("\n");
+
+  int i1, i2, i3, b1, b2, b3, e1, e2, e3;
+
+  if (va && len) {
+    if (!walkaddr(clr->pagetable, va)) return -1;
+
+    b1 = PX(2, PGROUNDDOWN(va));
+    b2 = PX(1, PGROUNDDOWN(va));
+    b3 = PX(0, PGROUNDDOWN(va));
+
+    e1 = PX(2, PGROUNDDOWN(va + len - 1)) + 1; 
+    e2 = PX(1, PGROUNDDOWN(va + len - 1)) + 1;
+    e3 = PX(0, PGROUNDDOWN(va + len - 1)) + 1;
+  } else b1 = b2 = b3 = 0, e1 = e2 = e3 = PTES;
+
+  for (i1 = b1; i1 < e1; ++i1) {
+    pte_t pte1 = clr->pagetable[i1];
+    pagetable_t pg1 = (pagetable_t)PTE2PA(pte1);
+
+    if (!(pte1 & PTE_V)) continue;
+
+    fmthex(i1, 3);
+    printf(" -> ");
+    fmthex((uint64)pg1, 16);
+    printf(" ");
+    printflags(pte1);
+
+    for (i2 = (i1 == b1 ? b2 : 0); i2 < (i1 == e1 - 1 ? e2 : PTES); ++i2) {
+      pte_t pte2 = pg1[i2];
+      pagetable_t pg2 = (pagetable_t)PTE2PA(pte2);
+
+      if (!(pte2 & PTE_V)) continue;
+
+      printf("└------ ");
+      fmthex(i2, 3);
+      printf(" -> ");
+      fmthex((uint64)pg2, 16);
+      printf(" ");
+      printflags(pte2);
+
+      for (i3 = (i1 == b1 && i2 == b2 ? b3 : 0); i3 < (i1 == e1 - 1 && i2 == e2 - 1 ? e3 : PTES); ++i3) {
+        pte_t pte3 = pg2[i3];
+        pagetable_t pg3 = (pagetable_t)PTE2PA(pte3);
+
+        if (!(pte3 & PTE_V)) continue;
+        if ((pte3 & msk) != msk) continue;
+
+        printf("        └--------- ");
+        fmthex(i3, 3);
+        printf(" -> ");
+        fmthex((uint64)pg3, 16);
+        printf(" ");
+        printflags(pte3);
+      }
+    }
+  }
+
+  return 0;
+}
+
+int rmflags(uint64 va, uint64 len, int msk) {
+  struct proc* clr = myproc();
+
+  int i1, i2, i3, b1, b2, b3, e1, e2, e3;
+
+  if (msk < 0 || msk > 3) return -2;
+  msk <<= 6;
+
+  if (va && len) {
+    if (!walkaddr(clr->pagetable, va)) return -1;
+
+    b1 = PX(2, PGROUNDDOWN(va));
+    b2 = PX(1, PGROUNDDOWN(va));
+    b3 = PX(0, PGROUNDDOWN(va));
+
+    e1 = PX(2, PGROUNDDOWN(va + len)) + 1; 
+    e2 = PX(1, PGROUNDDOWN(va + len)) + 1;
+    e3 = PX(0, PGROUNDDOWN(va + len)) + 1;
+  } else b1 = b2 = b3 = 0, e1 = e2 = e3 = PTES;
+
+  for (i1 = b1; i1 < e1; ++i1) {
+    pte_t pte1 = clr->pagetable[i1];
+    pagetable_t pg1 = (pagetable_t)PTE2PA(pte1);
+
+    if (!(pte1 & PTE_V)) continue;
+
+    for (i2 = i1 == b1 ? b2 : 0; i2 < (i1 == e1 - 1 ? e2 : PTES); ++i2) {
+      pte_t pte2 = pg1[i2];
+      pagetable_t pg2 = (pagetable_t)PTE2PA(pte2);
+
+      if (!(pte2 & PTE_V)) continue;
+
+      for (i3 = i1 == b1 && i2 == b2 ? b3 : 0; i3 < (i1 == e1 - 1 && i2 == e2 - 1 ? e3 : PTES); ++i3) {
+        pte_t* pte3 = pg2 + i3;
+
+        if (!(*pte3 & PTE_V)) continue;
+        *pte3 = *pte3 & ~msk;
+      }
+    }
+  }
+
+  return 0;
 }
