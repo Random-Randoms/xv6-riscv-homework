@@ -47,6 +47,7 @@ filealloc(void)
 struct file*
 filedup(struct file *f)
 {
+  //printf("duping at %p\n", f);
   acquire(&ftable.lock);
   if(f->ref < 1)
     panic("filedup");
@@ -65,6 +66,9 @@ fileclose(struct file *f)
   if(f->ref < 1)
     panic("fileclose");
   if(--f->ref > 0){
+    if (f->type == FD_MUTEX && holdingsleep(f->lock))
+      releasesleep(f->lock);
+
     release(&ftable.lock);
     return;
   }
@@ -79,6 +83,8 @@ fileclose(struct file *f)
     begin_op();
     iput(ff.ip);
     end_op();
+  } else if(ff.type == FD_MUTEX) {
+    mutexclose(f);
   }
 }
 

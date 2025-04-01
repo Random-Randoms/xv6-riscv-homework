@@ -51,5 +51,14 @@ holdingsleep(struct sleeplock *lk)
   return r;
 }
 
+int
+heldsleep(struct sleeplock *lk)
+{
+  int r;
 
+  acquire(&lk->lk);
+  r = lk->locked;
+  release(&lk->lk);
+  return r;
+}
 
