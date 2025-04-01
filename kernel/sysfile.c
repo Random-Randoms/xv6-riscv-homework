@@ -542,6 +542,7 @@ int sys_mutex_unlock(void) {
 
     if (!mt) return -1;
     if (mt->type != FD_MUTEX) return -2;
+    if (!holdingsleep(mt->lock)) return -3;
 
     releasesleep(mt->lock);
     return 0;
