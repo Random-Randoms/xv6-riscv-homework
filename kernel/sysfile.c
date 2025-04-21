@@ -16,6 +16,8 @@
 #include "file.h"
 #include "fcntl.h"
 
+#define INODE_BAD(ip) (ip->major < 0 || ip->major >= NDEVMAJ)
+
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int
@@ -315,7 +317,7 @@ sys_open(void)
     return -1;
 
   begin_op();
-
+  
   if(omode & O_CREATE){
     ip = create(path, T_FILE, 0, 0);
     if(ip == 0){
@@ -335,7 +337,7 @@ sys_open(void)
     }
   }
 
-  if(ip->type == T_DEVICE && (ip->major < 0 || ip->major >= NDEV)){
+  if(ip->type == T_DEVICE && INODE_BAD(ip)){
     iunlockput(ip);
     end_op();
     return -1;
@@ -352,6 +354,7 @@ sys_open(void)
   if(ip->type == T_DEVICE){
     f->type = FD_DEVICE;
     f->major = ip->major;
+    f->minor = ip->minor;
   } else {
     f->type = FD_INODE;
     f->off = 0;
