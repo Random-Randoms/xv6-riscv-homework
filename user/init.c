@@ -17,11 +17,16 @@ main(void)
   int pid, wpid;
 
   if(open("console", O_RDWR) < 0){
-    mknod("console", CONSOLE, 0);
+    mknod("console", CONSOLE_MAJ, CONSOLE_MIN);
     open("console", O_RDWR);
   }
   dup(0);  // stdout
   dup(0);  // stderr
+
+  printf("make devnull: %d\n", mknod("dev_null", DEV, DEV_NULL));
+  printf("make devzero: %d\n", mknod("dev_zero", DEV, DEV_ZERO));
+  printf("make devurnd: %d\n", mknod("dev_urandom", DEV, DEV_URND));
+  printf("make devnstt: %d\n", mknod("dev_nullstat", DEV, DEV_NSTT));
 
   for(;;){
     printf("init: starting sh\n");

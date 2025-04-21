@@ -1,3 +1,5 @@
+#include "param.h"
+
 struct file {
   enum { FD_NONE, FD_PIPE, FD_INODE, FD_DEVICE } type;
   int ref; // reference count
@@ -7,6 +9,7 @@ struct file {
   struct inode *ip;  // FD_INODE and FD_DEVICE
   uint off;          // FD_INODE
   short major;       // FD_DEVICE
+  short minor;       // FD_DEVICE
 };
 
 #define major(dev)  ((dev) >> 16 & 0xFFFF)
@@ -31,10 +34,17 @@ struct inode {
 
 // map major device number to device functions.
 struct devsw {
-  int (*read)(int, uint64, int);
-  int (*write)(int, uint64, int);
+  int (*read)(int, uint64, int, short);
+  int (*write)(int, uint64, int, short);
 };
 
-extern struct devsw devsw[];
+extern struct devsw devsw[NDEVMAJ];
 
-#define CONSOLE 1
+#define CONSOLE_MAJ 1
+#define CONSOLE_MIN 0
+
+#define DEV 2
+#define DEV_NULL 0
+#define DEV_ZERO 1
+#define DEV_URND 2
+#define DEV_NSTT 3

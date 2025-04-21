@@ -56,8 +56,10 @@ struct {
 // user write()s to the console go here.
 //
 int
-consolewrite(int user_src, uint64 src, int n)
+consolewrite(int user_src, uint64 src, int n, short minor)
 {
+  if (minor != CONSOLE_MIN) return -1;
+
   int i;
 
   for(i = 0; i < n; i++){
@@ -77,8 +79,10 @@ consolewrite(int user_src, uint64 src, int n)
 // or kernel address.
 //
 int
-consoleread(int user_dst, uint64 dst, int n)
+consoleread(int user_dst, uint64 dst, int n, short minor)
 {
+  if (minor != CONSOLE_MIN) return -1;
+
   uint target;
   int c;
   char cbuf;
@@ -187,6 +191,6 @@ consoleinit(void)
 
   // connect read and write system calls
   // to consoleread and consolewrite.
-  devsw[CONSOLE].read = consoleread;
-  devsw[CONSOLE].write = consolewrite;
+  devsw[CONSOLE_MAJ].read = consoleread;
+  devsw[CONSOLE_MAJ].write = consolewrite;
 }
