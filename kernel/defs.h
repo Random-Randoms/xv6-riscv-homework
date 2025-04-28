@@ -180,6 +180,9 @@ void            plicinithart(void);
 int             plic_claim(void);
 void            plic_complete(int);
 
+// rtc.c
+uint64          rtcgettime(void);
+
 // virtio_disk.c
 void            virtio_disk_init(void);
 void            virtio_disk_rw(struct buf *, int);

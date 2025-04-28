@@ -27,6 +27,9 @@ kvmmake(void)
   // uart registers
   kvmmap(kpgtbl, UART0, UART0, PGSIZE, PTE_R | PTE_W);
 
+  // rtc registers
+  kvmmap(kpgtbl, RTC, RTC, PGSIZE, PTE_R | PTE_W);
+
   // virtio mmio disk interface
   kvmmap(kpgtbl, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
 
