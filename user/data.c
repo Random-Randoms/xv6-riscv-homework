@@ -2,6 +2,8 @@
 #include "kernel/fcntl.h"
 #include "user/user.h"
 
+#define int64 signed long long
+
 #define MICR_NANO   1000
 #define MILL_MICR   1000
 #define SEC_MILL    1000
@@ -17,12 +19,14 @@
 #define LEAP    4
 
 #define PERIOD_DAYS  (NORMAL_YEAR * PERIOD + PERIOD / LEAP - PERIOD / CENTURY + 1)
-#define CENTURY0_END (CENTURY * PERIOD + CENTURY / LEAP - 1)
+#define SHORT_CENTURY (CENTURY * NORMAL_YEAR + CENTURY / LEAP - 1)
 
 #define SHORT_QUAD_DAYS (NORMAL_YEAR * LEAP)
 #define QUAD_DAYS       (SHORT_QUAD_DAYS + 1)
 
-#define UNIX_DAYS_ANNO_DOMINI (1970 * NORMAL_YEAR + 1970 / LEAP - 1970 / CENTURY + 1970 / PERIOD)
+#define UNIX_DAYS_ANNO_DOMINI (1969 * NORMAL_YEAR + 1969 / LEAP - 1969 / CENTURY + 1969 / PERIOD)
+
+#define NANO_TO_DAYS ((uint64)DAY_HR * HR_MIN * MIN_SEC * SEC_MILL * MILL_MICR * MICR_NANO)
 
 #define JAN        31
 #define FEB        28
@@ -58,8 +62,8 @@ void print2(short num) {
 }
 
 int main() {
-    uint64 t = time();
-    uint64 days = t / ((uint64)DAY_HR * HR_MIN * MIN_SEC * SEC_MILL * MILL_MICR * MICR_NANO) + UNIX_DAYS_ANNO_DOMINI;
+    int64 t = time();
+    uint64 days = (int64)UNIX_DAYS_ANNO_DOMINI + (t >= 0 ? t / NANO_TO_DAYS : -1 - ((-t) / NANO_TO_DAYS));
     int hour    = t / ((uint64)HR_MIN * MIN_SEC * SEC_MILL * MILL_MICR * MICR_NANO) % DAY_HR;
     int minute  = t / ((uint64)MIN_SEC * SEC_MILL * MILL_MICR * MICR_NANO) % HR_MIN;
     int second  = t / ((uint64)SEC_MILL * MILL_MICR * MICR_NANO) % MIN_SEC;
@@ -67,14 +71,17 @@ int main() {
     int micro   = t / MICR_NANO % MILL_MICR;
     int nano    = t % MICR_NANO;
 
-    uint64 period = days / (uint64)PERIOD_DAYS;
-    int period_day = days % PERIOD_DAYS;
-    int century = period_day / CENTURY0_END;
-    int century_day = period_day % CENTURY0_END;
-    if (century == 3 && century_day == 0) century_day = CENTURY0_END;
-    int quadrennium = century_day / QUAD_DAYS;
-    int quad_day = century_day % QUAD_DAYS; 
-    int day = quad_day % NORMAL_YEAR, year = quad_day / NORMAL_YEAR, leap = 0;
+    uint period = days / (uint64)PERIOD_DAYS;
+    uint period_day = days % PERIOD_DAYS;
+
+    uint century = period_day / SHORT_CENTURY;
+    uint century_day = period_day % SHORT_CENTURY;
+    if (century == 4) century = 3, century_day = SHORT_CENTURY;
+
+    uint quadrennium = century_day / QUAD_DAYS;
+    uint quad_day = century_day % QUAD_DAYS; 
+
+    uint day = quad_day % NORMAL_YEAR, year = quad_day / NORMAL_YEAR, leap = 0;
     if (year == 4) year = 3, day = NORMAL_YEAR, leap = 1;
 
     year += period * PERIOD + century * CENTURY + quadrennium * LEAP;
@@ -96,7 +103,7 @@ int main() {
 __print:
 
     print2(day + 1);
-    printf(" %s %d ", months[month], year);
+    printf(" %s %d ", months[month], year + 1);
     print2(hour);
     printf(":");
     print2(minute);

@@ -17,6 +17,7 @@
 
 #define ReadReg(reg) (*(Reg(reg)))
 
+// return value should be interpreted as int64
 uint64 rtcgettime() {
     uint32 low = ReadReg(LOW);
     uint32 high = ReadReg(HIGH);
